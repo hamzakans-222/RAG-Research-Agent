@@ -1,0 +1,37 @@
+# Configuration locale et secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+secrets/
+
+# Python et outils locaux
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.idea/
+.vscode/
+.codex/
+.agents/
+
+# Donnees locales, sauvegardes et documents personnels
+data/
+pgdata/
+backups/
+*.dump
+*.backup
+*.db
+*.sqlite*
+*.log
+*.pdf
+!rag_test_novatech.pdf
+.DS_Store
+Thumbs.db
