@@ -1,0 +1,15 @@
+{% extends 'accounts/layout.html' %}
+{% block title %}Connexion — Research assistant{% endblock %}
+{% block auth_top %}Pas encore de compte ? <a href="{% url 'accounts:signup' %}">Créer un compte ↗</a>{% endblock %}
+{% block auth_content %}
+  <span class="eyebrow">HEUREUX DE VOUS RETROUVER</span>
+  <h2>Reprenons le fil.</h2>
+  <p class="auth-description">Connectez-vous pour retrouver vos conversations.</p>
+  <form method="post" class="auth-form">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
+    {% include 'accounts/fields.html' %}
+    <button class="button primary full" type="submit">Se connecter <span aria-hidden="true">↗</span></button>
+  </form>
+  <p class="auth-note"><span aria-hidden="true">◈</span> Vos conversations sont accessibles depuis votre compte.</p>
+{% endblock %}

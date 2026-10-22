@@ -31,7 +31,8 @@ backups/
 *.db
 *.sqlite*
 *.log
+staticfiles/
+test-results/
 *.pdf
-!rag_test_novatech.pdf
 .DS_Store
 Thumbs.db

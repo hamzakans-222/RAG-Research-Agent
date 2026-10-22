@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block body_class %}auth-page{% endblock %}
+{% block body %}
+<aside class="auth-story">
+  <a href="{% url 'chat:home' %}" class="brand"><svg class="brand-mark icon" aria-hidden="true"><use href="#i-spark"/></svg><span>Research <span class="brand-secondary">assistant</span></span></a>
+  <div class="story-content">
+    <span class="eyebrow">LA CURIOSITÉ COMME POINT DE DÉPART</span>
+    <h1>Vos sources.<br>De nouvelles<br>perspectives.</h1>
+    <p>Un espace pour explorer vos documents, poser les bonnes questions et faire avancer vos recherches.</p>
+    <div class="story-illustration" aria-hidden="true">
+      <div class="illustration-top"><span class="mini-mark">✦</span><span>Research assistant</span><span class="little-dot"></span></div>
+      <div class="illustration-line long"></div><div class="illustration-line"></div>
+      <div class="illustration-note"><span>✦</span> Chaque source ouvre une perspective.</div>
+      <div class="illustration-bottom"><span>Votre espace personnel</span><span>↗</span></div>
+    </div>
+    <div class="story-features"><span>01 &nbsp; Un compte personnel</span><span>02 &nbsp; Plusieurs conversations</span><span>03 &nbsp; Un historique sauvegardé</span></div>
+  </div>
+  <span class="story-footer">Un peu d’espace pour aller plus loin.</span>
+</aside>
+<main id="main" class="auth-main">
+  <div class="auth-top">{% block auth_top %}{% endblock %}</div>
+  <div class="auth-card">{% block auth_content %}{% endblock %}</div>
+  <p class="auth-footer">Research assistant · Votre espace de recherche personnel</p>
+</main>
+{% endblock %}

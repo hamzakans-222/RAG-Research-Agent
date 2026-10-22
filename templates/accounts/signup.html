@@ -1,0 +1,14 @@
+{% extends 'accounts/layout.html' %}
+{% block title %}Créer un compte — Research assistant{% endblock %}
+{% block auth_top %}Déjà un compte ? <a href="{% url 'accounts:login' %}">Se connecter ↗</a>{% endblock %}
+{% block auth_content %}
+  <span class="eyebrow">TOUT COMMENCE ICI</span>
+  <h2>Faites place à vos idées.</h2>
+  <p class="auth-description">Créez votre compte et ouvrez votre première conversation.</p>
+  <form method="post" class="auth-form">
+    {% csrf_token %}
+    {% include 'accounts/fields.html' %}
+    <button class="button primary full" type="submit">Créer mon compte <span aria-hidden="true">↗</span></button>
+  </form>
+  <p class="auth-note">Votre historique vous attendra à chaque connexion.</p>
+{% endblock %}

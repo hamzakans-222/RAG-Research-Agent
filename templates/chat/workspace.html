@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}{% if conversation %}{{ conversation.title }} — {% endif %}Research assistant{% endblock %}
+{% block body_class %}workspace-page{% endblock %}
+{% block body %}
+<div class="workspace">
+  <button class="sidebar-overlay" type="button" aria-label="Fermer le menu" hidden></button>
+  <aside class="sidebar" id="sidebar">
+    <a href="{% url 'chat:home' %}" class="brand" aria-label="Research assistant — Accueil"><svg class="brand-mark icon" aria-hidden="true"><use href="#i-spark"/></svg><span>Research <span class="brand-secondary">assistant</span></span></a>
+    <form action="{% url 'chat:create' %}" method="post" class="new-conversation">{% csrf_token %}<button class="button sidebar-new" type="submit"><svg class="icon" aria-hidden="true"><use href="#i-chat"/></svg>Nouvelle conversation<svg class="icon trailing-icon" aria-hidden="true"><use href="#i-edit"/></svg></button></form>
+    <nav class="workspace-nav" aria-label="Navigation principale">
+      <a href="{% url 'chat:home' %}" class="nav-link {% if not conversation %}selected{% endif %}" {% if not conversation %}aria-current="page"{% endif %}><svg class="icon" aria-hidden="true"><use href="#i-home"/></svg>Accueil</a>
+      <button class="nav-link" type="button" id="search-shortcut"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>Rechercher<kbd>/</kbd></button>
+      {% if conversation %}<button class="nav-link" type="button" data-documents><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg>Documents du fil</button>{% endif %}
+    </nav>
+    <label class="search-box"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg><input type="search" id="conversation-search" placeholder="Rechercher un échange…" aria-label="Rechercher dans mes conversations"></label>
+    <div class="sidebar-label">Vos conversations <span id="conversation-total">{{ conversations|length }}</span></div>
+    <nav class="conversation-list" aria-label="Mes conversations">
+      {% for item in conversations %}
+      <a href="{{ item.get_absolute_url }}" class="conversation-link {% if item.pk == conversation.pk %}active{% endif %}" {% if item.pk == conversation.pk %}aria-current="page"{% endif %} data-conversation="{{ item.pk }}">
+        <svg class="icon conversation-symbol" aria-hidden="true"><use href="#i-chat"/></svg><span class="conversation-info"><span class="conversation-name">{{ item.title }}</span><span class="conversation-date">{{ item.updated_at|date:'d M' }} · {{ item.message_count }} message{{ item.message_count|pluralize }}</span></span>
+      </a>
+      {% empty %}<p class="sidebar-empty">Un sujet vous intrigue ?<br>Votre premier échange commence ici.</p>{% endfor %}
+      <p class="sidebar-empty" id="search-empty" hidden>Aucune conversation trouvée.</p>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="privacy-note"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg><span>Votre espace de recherche privé</span></div>
+      <div class="account-bar"><span class="avatar account-avatar" aria-hidden="true">{{ request.user.username|first|upper }}</span><div class="account-details"><strong>{{ request.user.username }}</strong><small>Compte personnel</small></div><form action="{% url 'accounts:logout' %}" method="post">{% csrf_token %}<button class="icon-button" type="submit" title="Se déconnecter" aria-label="Se déconnecter"><svg class="icon" aria-hidden="true"><use href="#i-logout"/></svg></button></form></div>
+    </div>
+  </aside>
+  <main class="main-panel" id="main">
+    <header class="workspace-header">
+      <div class="header-heading"><button class="icon-button menu-button" type="button" aria-label="Ouvrir le menu" aria-controls="sidebar" aria-expanded="false"><svg class="icon" aria-hidden="true"><use href="#i-menu"/></svg></button><div><a class="header-brand" href="{% url 'chat:home' %}">Research assistant</a><h1 id="conversation-title">{% if conversation %}{{ conversation.title }}{% else %}Votre espace de recherche{% endif %}</h1></div></div>
+      <div class="header-actions">
+        <span class="model-badge"><svg class="icon" aria-hidden="true"><use href="#i-spark"/></svg>Assistant documentaire</span>
+        {% if conversation %}<button type="button" class="icon-button" data-dialog="rename-dialog" aria-label="Renommer la conversation" title="Renommer"><svg class="icon" aria-hidden="true"><use href="#i-edit"/></svg></button><button type="button" class="icon-button delete-action" data-dialog="delete-dialog" aria-label="Supprimer cette conversation" title="Supprimer"><svg class="icon" aria-hidden="true"><use href="#i-trash"/></svg></button>{% endif %}
+        <span class="avatar header-avatar" title="{{ request.user.username }}"><span class="sr-only">Compte : </span>{{ request.user.username|first|upper }}</span>
+      </div>
+    </header>
+    {% if messages %}<div class="flash-stack" aria-live="polite">{% for message in messages %}<div class="flash {{ message.tags }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+    {% if conversation %}
+    <section class="chat-area" id="chat-area" aria-label="Historique de la conversation">
+      <div class="chat-start"><span>{{ conversation.created_at|date:'d F Y' }}</span></div>
+      <details class="document-panel" id="document-panel">
+        <summary><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg>Sources de cette conversation <span class="document-count" id="document-count">{{ documents|length }}</span><svg class="icon details-chevron" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+        <div id="document-list" class="document-list">{% for document in documents %}<article class="document-card" data-document-id="{{ document.pk }}"><svg class="icon document-icon" aria-hidden="true"><use href="#i-file"/></svg><div class="document-info"><strong>{{ document.filename }}</strong><span>{{ document.chunk_count }} passage{{ document.chunk_count|pluralize }} · {{ document.created_at|date:'d/m/Y · H:i' }}</span></div><span class="document-badge">Indexé</span></article>{% endfor %}</div>
+        <p class="document-empty" id="document-empty" {% if documents %}hidden{% endif %}>Aucune source pour le moment. Importez un document pour commencer.</p>
+        <button type="button" class="button subtle document-add" data-dialog="import-dialog"><svg class="icon" aria-hidden="true"><use href="#i-clip"/></svg>Ajouter un document</button>
+      </details>
+      <div id="message-list" class="message-list" aria-live="polite" aria-relevant="additions">
+        {% for message in chat_messages %}<article class="message message-{{ message.role }}" data-message-id="{{ message.pk }}"><span class="avatar {% if message.role == 'assistant' %}assistant-avatar{% endif %}" aria-hidden="true">{% if message.role == 'user' %}{{ request.user.username|first|upper }}{% else %}✦{% endif %}</span><div class="message-body"><div class="message-meta"><strong>{% if message.role == 'user' %}Vous{% else %}Research assistant{% endif %}</strong><time datetime="{{ message.created_at|date:'c' }}">{{ message.created_at|date:'H:i' }}</time></div><div class="message-content">{{ message.content }}</div></div></article>{% endfor %}
+      </div>
+      <div class="conversation-empty" id="conversation-empty" {% if chat_messages %}hidden{% endif %}>
+        <span class="welcome-mark"><svg class="icon" aria-hidden="true"><use href="#i-spark"/></svg></span><span class="eyebrow">DE VOS SOURCES À VOS IDÉES</span><h2>Explorons vos documents.</h2><p>Un article, un rapport, une question.<br>Importez vos sources et allons à l’essentiel.</p>
+        <button class="button primary" type="button" data-dialog="import-dialog"><svg class="icon" aria-hidden="true"><use href="#i-clip"/></svg>Importer un document</button>
+        <div class="prompt-grid"><button class="prompt-card" type="button" data-prompt="Résume les idées principales de mes documents."><svg class="icon" aria-hidden="true"><use href="#i-file"/></svg><span>Aller à l’essentiel<small>Résumer les idées principales</small></span><svg class="icon prompt-arrow" aria-hidden="true"><use href="#i-arrow"/></svg></button><button class="prompt-card" type="button" data-prompt="Explique les concepts clés de mes documents avec des exemples simples."><svg class="icon" aria-hidden="true"><use href="#i-spark"/></svg><span>Comprendre un sujet<small>Éclaircir les concepts clés</small></span><svg class="icon prompt-arrow" aria-hidden="true"><use href="#i-arrow"/></svg></button></div>
+      </div>
+    </section>
+    <div class="composer-area">
+      <p id="import-status" class="import-status" role="status"></p>
+      <form method="post" action="{% url 'chat:send' conversation.pk %}" id="message-form" class="composer" data-username="{{ request.user.username }}" data-conversation="{{ conversation.pk }}">
+        {% csrf_token %}<input type="hidden" name="request_id" id="request-id" value="{{ request_id }}">
+        <button type="button" class="icon-button attachment-button" data-dialog="import-dialog" aria-label="Importer un document" title="Importer un document"><svg class="icon" aria-hidden="true"><use href="#i-clip"/></svg></button>
+        <label class="sr-only" for="message-content">Votre message</label><textarea id="message-content" name="content" rows="1" maxlength="10000" placeholder="Une question pour Research assistant…" required>{{ draft }}</textarea>
+        <button type="button" class="source-button" data-documents title="Afficher les documents de cette conversation"><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg><span>Mes sources</span><svg class="icon" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+        <button type="submit" class="send-button" id="send-button" aria-label="Envoyer le message"><svg class="icon" aria-hidden="true"><use href="#i-send"/></svg></button>
+      </form>
+      <div class="composer-caption"><p id="send-status" class="send-status" role="status">Des réponses à partir de vos documents.</p><span class="keyboard-hint">Entrée pour envoyer <span aria-hidden="true">↵</span></span></div>
+    </div>
+    {% else %}
+    <section class="welcome"><div class="welcome-content"><span class="welcome-mark"><svg class="icon" aria-hidden="true"><use href="#i-spark"/></svg></span><span class="eyebrow">VOTRE CURIOSITÉ, UN PEU PLUS LOIN</span><h2>Bonjour, {{ request.user.username }}.<br><span>Que souhaitez-vous explorer ?</span></h2><p>Faites parler vos documents. Retrouvez une information,<br class="desktop-break"> reliez les idées et donnez de la clarté à vos recherches.</p>
+      <form action="{% url 'chat:create' %}" method="post">{% csrf_token %}<button class="button primary welcome-cta" type="submit">Commencer une conversation<svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></button></form>
+      <div class="feature-grid"><div class="feature-card"><span class="feature-icon blue"><svg class="icon" aria-hidden="true"><use href="#i-file"/></svg></span><span class="feature-number">01</span><h3>Vos documents</h3><p>Rassemblez vos articles, rapports et notes dans un même fil.</p><span class="feature-tag">PDF · TXT · Markdown</span></div><div class="feature-card"><span class="feature-icon amber"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg></span><span class="feature-number">02</span><h3>Vos questions</h3><p>Interrogez vos sources et explorez ce qui compte pour vous.</p><span class="feature-tag">Une recherche ciblée</span></div><div class="feature-card"><span class="feature-icon violet"><svg class="icon" aria-hidden="true"><use href="#i-spark"/></svg></span><span class="feature-number">03</span><h3>De nouvelles idées</h3><p>Retrouvez vos réponses et poursuivez la réflexion à tout moment.</p><span class="feature-tag">Un historique sauvegardé</span></div></div>
+      <p class="welcome-footnote"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg>Vos documents et vos échanges restent dans votre espace personnel.</p>
+    </div></section>
+    {% endif %}
+  </main>
+</div>
+{% if conversation %}
+<dialog id="import-dialog" class="modal import-modal" aria-labelledby="import-heading"><form action="{% url 'chat:upload' conversation.pk %}" method="post" enctype="multipart/form-data" id="document-upload-form">{% csrf_token %}
+  <div class="modal-heading"><span class="feature-icon amber"><svg class="icon" aria-hidden="true"><use href="#i-file"/></svg></span><button type="button" class="icon-button" data-close-dialog aria-label="Fermer"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button></div><h2 id="import-heading">Ajoutez une source.</h2><p>Un document pour nourrir la conversation. L’assistant s’appuiera sur son contenu pour vous répondre.</p>
+  <label for="document-file">Votre document</label><input id="document-file" name="document" type="file" accept=".pdf,.txt,.md,application/pdf,text/plain,text/markdown" required><p class="upload-help">PDF contenant du texte, TXT ou Markdown en UTF-8.<br>10 Mo maximum · 200 pages par PDF.</p><p class="upload-feedback" id="upload-feedback" role="status">Le document sera associé uniquement à cette conversation.</p><div class="modal-actions"><button type="button" class="button subtle" data-close-dialog>Annuler</button><button type="submit" class="button primary" id="upload-submit">Importer et indexer</button></div>
+</form></dialog>
+<dialog id="rename-dialog" class="modal" aria-labelledby="rename-heading"><form action="{% url 'chat:rename' conversation.pk %}" method="post">{% csrf_token %}<span class="eyebrow">VOTRE CONVERSATION</span><h2 id="rename-heading">Donnez-lui un nom.</h2><label for="rename-title">Titre de la conversation</label><input type="text" id="rename-title" name="title" value="{{ conversation.title }}" maxlength="120" required><div class="modal-actions"><button type="button" class="button subtle" data-close-dialog>Annuler</button><button type="submit" class="button primary">Enregistrer</button></div></form></dialog>
+<dialog id="delete-dialog" class="modal" aria-labelledby="delete-heading"><form action="{% url 'chat:delete' conversation.pk %}" method="post">{% csrf_token %}<span class="eyebrow">SUPPRIMER UNE CONVERSATION</span><h2 id="delete-heading">Supprimer cet échange ?</h2><p>La conversation « <span id="delete-title">{{ conversation.title }}</span> », ses messages et ses documents indexés seront supprimés définitivement.</p><div class="modal-actions"><button type="button" class="button subtle" data-close-dialog>Annuler</button><button type="submit" class="button danger">Supprimer</button></div></form></dialog>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,9 @@
+pypdf==6.19.0
+langchain-core==1.6.13
+langchain-google-genai==4.4.2
+langchain-text-splitters==1.1.2
+langchain-ollama==1.1.0
+langchain-postgres==0.0.19
+psycopg[binary]==3.3.6
+SQLAlchemy==2.0.52
+python-dotenv==1.2.4
