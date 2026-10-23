@@ -21,7 +21,7 @@ def generate_answer(question, vector_store, chain, *, user_id, id_conversation, 
         "context": context, "question": question,
         "history": [(role, text[:1500]) for role, text in history],
     })
-    # Gemini may return content blocks; .text extracts only the answer text.
+    # The model may return content blocks; .text extracts only the answer text.
     answer = response.text
     if not isinstance(answer, str) or not answer.strip():
         raise ValueError("Le modèle a retourné une réponse vide.")
